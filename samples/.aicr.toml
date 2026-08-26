@@ -1,0 +1,33 @@
+# Example team config, used by run-smoke.py.
+# This is what a real .aicr.toml looks like once it's filled in — copy the
+# shape of it into your own repo with `aicr init`.
+
+provider = "gemini"
+fail_on  = "high"
+fail_open = true
+concurrency = 4
+
+project_context = """
+Mixed-stack product codebase:
+- Backend: Python 3.11, Django 4 REST API, Postgres 15
+- Frontend: React 18 + TypeScript, Node 20 services
+- Some Go services for high-throughput internal APIs
+- Infra: AWS ECS, provisioning via bash + Terraform
+
+Conventions:
+- All DB access goes through the ORM or parameterized queries, never string SQL.
+- Secrets come from environment variables, never from source or config files.
+- Outbound HTTP must set an explicit timeout.
+"""
+
+custom_rules = [
+  "No secrets, API keys, tokens, or passwords in source or config files.",
+  "All new HTTP endpoints must validate and sanitize user input.",
+  "No raw SQL string interpolation - use parameterized queries or the ORM.",
+  "Every outbound HTTP call must set an explicit timeout.",
+  "Database queries that can grow unbounded must be paginated or limited.",
+  "Check-then-act on shared state must be atomic (single UPDATE, lock, or transaction).",
+  "Shell scripts must use `set -euo pipefail` and quote all variable expansions.",
+  "Never log passwords, tokens, or full payment details.",
+  "Database migrations must be backwards compatible with the running release.",
+]

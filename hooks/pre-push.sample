@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Reference copy of the hook that `aicr install-hook` writes.
+# You do not need to copy this manually — run `aicr install-hook` instead.
+#
+# Emergency bypass:  git push --no-verify
+# Temporary disable: AICR_DISABLE=1 git push
+
+set -uo pipefail
+
+if [ "${AICR_DISABLE:-0}" = "1" ]; then
+  echo "aicr: skipped (AICR_DISABLE=1)" >&2
+  exit 0
+fi
+
+if ! command -v aicr >/dev/null 2>&1; then
+  echo "aicr: reviewer not found on PATH - skipping review." >&2
+  exit 0
+fi
+
+aicr pre-push "$@" < /dev/stdin
+exit $?
