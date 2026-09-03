@@ -244,11 +244,12 @@ Settings merge in this order, later wins:
 | `custom_rules` | `[]` | Team rules the reviewer must enforce |
 | `telemetry.enabled` | `false` | Report each review to `telemetry.webhook_url` (see [Visibility for admins](#visibility-for-admins)) |
 | `telemetry.webhook_url` | `""` | Where to POST review events |
+| `telemetry.format` | `json` | `card` sends a Microsoft Adaptive Card instead of raw JSON — needed for a Teams "Post to a channel" Workflow |
 | `telemetry.include_findings` | `false` | Include finding text (not just counts) in the event |
 
 Env overrides: `AICR_PROVIDER`, `AICR_MODEL`, `AICR_FAIL_ON`, `AICR_FAIL_OPEN`,
 `AICR_CONCURRENCY`, `AICR_TIMEOUT`, `AICR_CACHE`, `AICR_MAX_FILES`, `AICR_DISABLE=1`,
-`AICR_TELEMETRY_WEBHOOK` (also flips `telemetry.enabled` on).
+`AICR_TELEMETRY_WEBHOOK` (also flips `telemetry.enabled` on), `AICR_TELEMETRY_FORMAT`.
 
 ### Providers
 
@@ -318,21 +319,41 @@ was blocked. Two independent places it can land:
   regardless of the `telemetry` config. `aicr doctor` prints the path.
 - **A webhook, opt-in.** Set `telemetry.enabled = true` and `telemetry.webhook_url`
   and each event is also POSTed there as JSON — point it at a Slack incoming
-  webhook, or your own endpoint. Finding text is left out by default (only
-  severity counts go out); set `telemetry.include_findings = true` to send it.
-  A broken or slow webhook never blocks or delays the push beyond its
-  `telemetry.timeout_s` (default 4s, no retries).
+  webhook, a Microsoft Teams channel Workflow, or your own endpoint. Finding text
+  is left out by default (only severity counts go out); set
+  `telemetry.include_findings = true` to send it. A broken or slow webhook never
+  blocks or delays the push beyond its `telemetry.timeout_s` (default 4s, no
+  retries).
 
-```toml
-# .aicr.toml
-[telemetry]
-enabled = true
-webhook_url = "https://hooks.slack.com/services/…"
+The webhook URL is a bearer credential — whoever holds it can post into that
+channel — so pick how you distribute it based on who's in this repo:
+
+**Option A — per-developer env var (URL never touches git, nothing to commit):**
+
+```bash
+# each developer's shell profile
+export AICR_TELEMETRY_WEBHOOK="<TEAM_WEBHOOK_URL>"
+export AICR_TELEMETRY_FORMAT=card   # only needed for a Teams "Post to a channel" Workflow
 ```
 
-Prefer setting `AICR_TELEMETRY_WEBHOOK` in each developer's shell (or in your
-bootstrap script) over committing the URL to `.aicr.toml` — it behaves like a
-credential, and the env var takes priority over config.
+Send the URL itself out-of-band — a password manager entry, not a Slack/Teams
+message — since pasting a webhook URL into the same kind of chat app it posts
+to is how it ends up screenshotted or forwarded. The env var always wins over
+`.aicr.toml`, so this works regardless of what's committed.
+
+**Option B — committed to `.aicr.toml`, every clone gets it automatically:**
+
+```toml
+# .aicr.toml — committed; readable by anyone with read access to this repo
+[telemetry]
+enabled = true
+webhook_url = "<TEAM_WEBHOOK_URL>"
+format = "card"   # only needed for a Teams "Post to a channel" Workflow
+```
+
+Zero setup per developer, but only do this if you'd trust every current and
+future collaborator on this repo with the ability to post into that channel —
+the URL sits there in plain text for anyone who can read the file.
 
 **Verify a new webhook before relying on it:**
 
