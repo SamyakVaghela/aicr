@@ -59,7 +59,7 @@ the diff gets reviewed.
 ## Install (each developer, once)
 
 ```bash
-git clone <this-repo> ~/tools/aicr        # or however you distribute it
+git clone https://github.com/SamyakVaghela/aicr.git ~/tools/aicr
 cd ~/your-project
 ~/tools/aicr/scripts/setup-dev.sh
 ```
@@ -76,7 +76,7 @@ echo 'export ANTHROPIC_API_KEY=sk-ant-...' >> ~/.zshrc && source ~/.zshrc
 Manual equivalent:
 
 ```bash
-pipx install ~/tools/aicr
+pipx install git+https://github.com/SamyakVaghela/aicr.git
 cd ~/your-project && aicr install-hook && aicr doctor
 ```
 
